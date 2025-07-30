@@ -1,0 +1,9 @@
+# ignora a virtual-env inteira
+.venv/
+
+# ainda vai rastrear o .env
+!.env
+
+# outras regras
+__pycache__/
+*.py[cod]
