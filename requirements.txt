@@ -28,8 +28,5 @@ protobuf
 # Para compatibilidade com arquivos XML/KML
 lxml
 
-# (opcional, mas pode evitar warnings de exportação de CSV)
-csv
-
 # API do OpenAI (usada no mapa.py)
 openai
