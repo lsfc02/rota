@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  rota-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rota-app
+    ports:
+      - "8501:8501"
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
