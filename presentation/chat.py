@@ -1,4 +1,3 @@
-# presentation/chat.py
 import streamlit as st
 
 def show(rag_cls, colecao: str):

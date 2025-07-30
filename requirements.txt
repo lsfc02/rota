@@ -1,7 +1,35 @@
-pandas
-openpyxl
+# Bibliotecas principais de IA e RAG
 langchain
 langchain-community
 langchain-groq
 faiss-cpu
 sentence-transformers
+
+# Bibliotecas de processamento de dados
+pandas
+openpyxl
+
+# Visualização e app web
+streamlit
+streamlit-folium
+folium
+streamlit-sortables
+
+# Geolocalização e otimização de rotas
+openrouteservice
+
+# Utilitários
+python-dotenv
+
+# Bibliotecas do Google OR-Tools
+ortools
+protobuf
+
+# Para compatibilidade com arquivos XML/KML
+lxml
+
+# (opcional, mas pode evitar warnings de exportação de CSV)
+csv
+
+# API do OpenAI (usada no mapa.py)
+openai
