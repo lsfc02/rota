@@ -1,4 +1,3 @@
-# run_route.py
 import sys
 import os
 import json
@@ -13,18 +12,19 @@ from openrouteservice.optimization import Job, Vehicle
 
 load_dotenv()
 
-def gerar_rota(path_csv: str) -> Tuple[pd.DataFrame, List[Dict], Dict]:
+def gerar_rota(path_csv: str, num_semanas: int = 2) -> Tuple[pd.DataFrame, List[Dict], Dict]:
     # 1) Carrega e filtra CSV
     df = pd.read_csv(path_csv)
     df["clilatitude"]  = pd.to_numeric(df["clilatitude"], errors="coerce")
     df["clilongitude"] = pd.to_numeric(df["clilongitude"], errors="coerce")
-    df = df.dropna(subset=["codcli","clilatitude","clilongitude"])
+    df = df.dropna(subset=["codcli","clilatitude","clilongitude", "nomcli"])
     df = df[(df.clilatitude != 0) & (df.clilongitude != 0)]
 
     # 2) Lista de clientes
     clientes = [
         {
             "cod_cliente": str(int(r.codcli)),
+            "nome": str(r.nomcli).strip(),
             "latitude": float(r.clilatitude),
             "longitude": float(r.clilongitude)
         }
@@ -56,8 +56,8 @@ def gerar_rota(path_csv: str) -> Tuple[pd.DataFrame, List[Dict], Dict]:
         nxt = min(unv, key=lambda j: mat[cur][j])
         unv.remove(nxt); route.append(nxt); cur = nxt
 
-    # 4) Fatiamento em 10 dias úteis
-    dias_uteis = 10
+    # 4) Fatiamento em dias úteis baseado nas semanas escolhidas
+    dias_uteis = num_semanas * 5  # 5 dias úteis por semana
     por_dia = math.ceil(len(route)/dias_uteis)
     slices = [route[i*por_dia:(i+1)*por_dia] for i in range(dias_uteis)]
 
@@ -106,10 +106,11 @@ def gerar_rota(path_csv: str) -> Tuple[pd.DataFrame, List[Dict], Dict]:
                 c = clientes[client_idx]
                 visitas.append({
                     "id": c["cod_cliente"],
+                    "nome": c["nome"],
                     "latitude": c["latitude"],
                     "longitude": c["longitude"]
                 })
-                semana = 1 if vid <= 5 else 2
+                semana = ((vid - 1) // 5) + 1
                 dia_sem = (vid - 1) % 5 + 1
                 df_rows.append({
                     "cod": c["cod_cliente"],
@@ -121,9 +122,9 @@ def gerar_rota(path_csv: str) -> Tuple[pd.DataFrame, List[Dict], Dict]:
         rota_json.append({"dia": vid, "visitas": visitas})
 
         if day:
-            semana = 1 if vid <= 5 else 2
+            semana = ((vid - 1) // 5) + 1
             dia_label = weekdays[(vid - 1) % 5]
-            agenda[f"Semana {semana}"][dia_label] = [v["id"] for v in visitas]
+            agenda[f"Semana {semana}"][dia_label] = [f"{v['id']} - {v['nome']}" for v in visitas]  # pode ser só v['id'] se preferir
 
     full_json = {"clientes": clientes, "agenda": dict(agenda)}
     df_rota = pd.DataFrame(df_rows, columns=["cod","numero_semana","dia_semana","ordem_visita"])
@@ -131,11 +132,14 @@ def gerar_rota(path_csv: str) -> Tuple[pd.DataFrame, List[Dict], Dict]:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Uso: python run_route.py caminho/para/arquivo.csv")
+    if len(sys.argv) not in [2, 3]:
+        print("Uso: python run_route.py caminho/para/arquivo.csv [num_semanas]")
         sys.exit(1)
 
-    df_rota, rota_json, full_json = gerar_rota(sys.argv[1])
+    path_csv = sys.argv[1]
+    num_semanas = int(sys.argv[2]) if len(sys.argv) == 3 else 2
+
+    df_rota, rota_json, full_json = gerar_rota(path_csv, num_semanas=num_semanas)
     print(df_rota.head(), f"\n✅ Processados: {len(df_rota)} registros.")
     with open("rota.json","w",encoding="utf-8") as f:
         json.dump(rota_json, f, ensure_ascii=False, indent=2)

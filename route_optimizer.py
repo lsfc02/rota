@@ -1,5 +1,3 @@
-# route_optimizer.py
-
 import math
 from ortools.constraint_solver import routing_enums_pb2, pywrapcp
 from google.protobuf.duration_pb2 import Duration

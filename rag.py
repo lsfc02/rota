@@ -3,12 +3,10 @@ import math
 import json
 from dotenv import load_dotenv
 
-# Carrega as variáveis de .env
 load_dotenv()
 
 from langchain_groq import ChatGroq
 import openrouteservice
-
 
 class RouteVerifier:
     def __init__(self):
@@ -68,7 +66,6 @@ class RouteVerifier:
         if not issues:
             return "Rota validada sem inconsistências detectadas."
 
-        # indicação de uso do LLM
         print("👉 UTILIZANDO A IA LLM para verificar erros e sugerir correções…")
 
         summary = "\n".join(issues)
@@ -81,11 +78,10 @@ class RouteVerifier:
             {"role": "user",   "content": f"Problemas:\n{summary}"}
         ]
         try:
-            resp = self.llm.create(messages=messages)
-            return resp.choices[0].message.content
+            resp = self.llm.invoke(messages)
+            return resp.content
         except Exception as e:
             return f"Erro LLM na verificação: {e}"
-
 
 if __name__ == "__main__":
     rota = json.load(open("rota.json", "r", encoding="utf-8"))

@@ -58,6 +58,15 @@ st.title("🌐 Visualizador de Rotas")
 
 # Sidebar para importar CSV
 st.sidebar.header("🗂️ Importar CSV e gerar rota")
+
+# Opção de selecionar o número de semanas
+num_semanas = st.sidebar.selectbox(
+    "Separar em quantas semanas?", 
+    options=[1, 2, 3, 4], 
+    index=1,  # padrão: 2 semanas (quinzenal)
+    help="Exemplo: 2 = quinzenal, 4 = mensal"
+)
+
 arquivo = st.sidebar.file_uploader("Envie seu CSV de clientes", type=["csv"])
 if st.sidebar.button("Processar CSV"):
     if not arquivo:
@@ -71,8 +80,8 @@ if st.sidebar.button("Processar CSV"):
         tmp.flush()
         tmp.close()
 
-        # gera rota
-        df_rota, rota_json, full_json = gerar_rota(tmp.name)
+        # Passa num_semanas para gerar_rota!
+        df_rota, rota_json, full_json = gerar_rota(tmp.name, num_semanas=num_semanas)
 
         # validação IA
         feedback = RouteVerifier().verify(rota_json)

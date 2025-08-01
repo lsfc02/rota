@@ -2,6 +2,7 @@ import json
 import csv
 import io
 from typing import List, Dict, Tuple
+import html  
 
 def load_json(path: str) -> List[Dict]:
     with open(path, "r", encoding="utf-8") as f:
@@ -16,15 +17,17 @@ def generate_kml(rota: List[Dict]) -> str:
     )
     footer = '  </Document>\n</kml>'
 
-    # 1) Gera uma pasta por dia
+    # 1 - gera uma pasta por dia
     day_folders = []
     for day in rota:
-        day_name = f"Dia_{day['dia']}"
+        day_name = html.escape(f"Dia_{day['dia']}")
         placemarks = []
         for v in day.get("visitas", []):
+            # ESCAPA o nome COMPLETO
+            nome_completo = html.escape(f"{v['id']} - {v.get('nome', '')}".strip(" -"))
             placemarks.append(
                 f"    <Placemark>\n"
-                f"      <name>{v['id']}</name>\n"
+                f"      <name>{nome_completo}</name>\n"
                 f"      <Point>\n"
                 f"        <coordinates>{v['longitude']},{v['latitude']},0</coordinates>\n"
                 f"      </Point>\n"
@@ -43,15 +46,15 @@ def generate_kml(rota: List[Dict]) -> str:
     for w in range(0, len(day_folders), WEEK_DAYS):
         semana = w // WEEK_DAYS + 1
         content = "".join(day_folders[w : w + WEEK_DAYS])
+        semana_nome = html.escape(f"Semana_{semana}")
         week_folders.append(
             f"  <Folder>\n"
-            f"    <name>Semana_{semana}</name>\n"
+            f"    <name>{semana_nome}</name>\n"
             + content +
             "  </Folder>\n"
         )
 
     return header + "".join(week_folders) + footer
-
 
 def export_csv_to_bytes(rota: List[Dict]) -> bytes:
     buf = io.StringIO()
@@ -77,7 +80,6 @@ def export_csv_to_bytes(rota: List[Dict]) -> bytes:
 
     return buf.getvalue().encode("utf-8")
 
-
 def exportar_kml_csv(rota: List[Dict]) -> Tuple[bytes, bytes]:
     """
     Retorna (kml_bytes, csv_bytes) para download,
@@ -86,7 +88,6 @@ def exportar_kml_csv(rota: List[Dict]) -> Tuple[bytes, bytes]:
     kml_bytes = generate_kml(rota).encode("utf-8")
     csv_bytes = export_csv_to_bytes(rota)
     return kml_bytes, csv_bytes
-
 
 if __name__ == "__main__":
     rota = load_json("rota.json")
